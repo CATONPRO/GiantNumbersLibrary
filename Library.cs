@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -56,35 +56,33 @@ namespace GiantNumbersLibrary
         /// <summary>
         /// Сложение чисел
         /// </summary>
-        /// <param name="number1">Слогаемое</param>
-        /// <param name="number2">Слогаемое</param>
-        public static GiantNumber Sum(GiantNumber number1, GiantNumber number2)
+        /// <param name="number1">Слaгаемое</param>
+        /// <param name="number2">Слaгаемое</param>
+        public static string Sum(string number1, string number2)
         {
-            GiantNumber longerNum = Utils.GetLongestNum(number1, number2);
-            GiantNumber shorterNum = Utils.GetShortestNum(number1, number2);
-            Dictionary<double, char> numMap1 = Utils.StringToCharList(longerNum.Get());
-            Dictionary<double, char> numMap2 = Utils.StringToCharList(shorterNum.Get());
+            Dictionary<double, char> numMap1 = Utils.StringToCharList(Utils.GetLongestNum(new GiantNumber(number1), new GiantNumber(number2)).Get());
+            Dictionary<double, char> numMap2 = Utils.StringToCharList(Utils.GetShortestNum(new GiantNumber(number1), new GiantNumber(number2)).Get());
 
             string result = "";
-            int transfer = 0;
-            double currentNum = 0;
-            foreach (char Char in numMap1.Values)
+            byte transfer = 0;
+            double currentNum = 1;
+            int resultDigit = 0;
+            
+            while (currentNum < Utils.ArrayLength(numMap1))
             {
-                int resultDigit = int.Parse(Char.ToString()) + int.Parse(numMap2[currentNum].ToString()) + transfer;
-                currentNum++;
+                resultDigit = int.Parse(numMap1[currentNum].ToString()) + int.Parse(numMap2[currentNum].ToString()) + transfer;
                 if (resultDigit >= 10)
                 {
                     resultDigit -= 10;
                     transfer = 1;
                 }
                 else transfer = 0;
-                if (currentNum != 1) result = resultDigit.ToString() + result;
+                currentNum++;
+                result = resultDigit.ToString() + result;
             }
 
             if (transfer == 1) result = "1" + result;
-
-            GiantNumber resultNumber = new GiantNumber(result);
-            return resultNumber;
+            return result;
         }
         /// <summary>
         /// Вычитание чисел
@@ -124,24 +122,22 @@ namespace GiantNumbersLibrary
                 else                                 NumIsReady = true;
             }
 
-            if (result == "") result = "0";
-            GiantNumber resultNumber = new GiantNumber(result);
-            return resultNumber;
+            return new GiantNumber(result);
         }
         /// <summary>
         /// Учножение чисел
         /// </summary>
         /// <param name="num">Число</param>
         /// <param name="multiplier">Множитель</param>
-        public static GiantNumber Multiply(GiantNumber num, GiantNumber multiplier)
+        
+        public static string Multiply(string num, string multiplier)
         {
-            GiantNumber operationNum = new GiantNumber("0");
-            GiantNumber increment = new GiantNumber("1");
-            GiantNumber res = new GiantNumber("0");
+            string operationNum = "0";
+            string res = "0";
 
-            while (operationNum.Get() != multiplier.Get())
+            while (operationNum != multiplier)
             {
-                operationNum = Sum(operationNum, increment);
+                operationNum = Sum(operationNum, "1");
                 res = Sum(res, num);
             }
             return res;
@@ -151,36 +147,17 @@ namespace GiantNumbersLibrary
         /// </summary>
         /// <param name="num">Число</param>
         /// <param name="pow">Степень</param>
-        public static GiantNumber Pow(GiantNumber num, GiantNumber pow)
+        public static string Pow(string num, string pow)
         {
-            if (pow.Get() == "0") return new GiantNumber("1");
-            if (pow.Get() == "1") return new GiantNumber(num.Get());
+            string operationNum = "1";
+            string res = num;
 
-            int numberOfTasks = Environment.ProcessorCount;
-            GiantNumber[] results = new GiantNumber[numberOfTasks];
-            int exponent = int.Parse(pow.Get());
-            int chunkSize = exponent / numberOfTasks;
-
-            Parallel.For(0, numberOfTasks, i =>
+            while (operationNum != pow)
             {
-                int start = i * chunkSize;
-                int end = (i == numberOfTasks - 1) ? exponent : (i + 1) * chunkSize;
-
-                GiantNumber partialResult = new GiantNumber("1");
-                for (int j = start; j < end; j++)
-                {
-                    partialResult = Multiply(partialResult, num);
-                }
-                results[i] = partialResult;
-            });
-
-            GiantNumber finalResult = new GiantNumber("1");
-            foreach (var partial in results)
-            {
-                finalResult = Multiply(finalResult, partial);
+                operationNum = Sum(operationNum, "1");
+                res = Multiply(res, num);
             }
-
-            return finalResult;
+            return res;
         }
         /// <summary>
         /// Получение квадратного корня числа
@@ -196,19 +173,19 @@ namespace GiantNumbersLibrary
             {
                 previousGuess = guess;
                 GiantNumber temp = Divide(num, guess);
-                guess = Average(guess, temp);
+                guess = Average(guess.Get(), temp.Get());
             } while (Subtract(guess, previousGuess).Get() != "0");
 
             return guess;
         }
         /// <summary>
-        /// Получение среднего арифметического числа
+        /// Получение среднего арифметического чисел
         /// </summary>
         /// <param name="a">Число 1</param>
         /// <param name="b">Число 1</param>
-        public static GiantNumber Average(GiantNumber a, GiantNumber b)
+        public static GiantNumber Average(string a, string b)
         {
-            GiantNumber sum = Sum(a, b);
+            GiantNumber sum = new GiantNumber(Sum(a, b));
             return Divide(sum, new GiantNumber("2"));
         }
         /// <summary>
@@ -224,8 +201,8 @@ namespace GiantNumbersLibrary
             GiantNumber baseMod = Mod(baseNum, modulus);
             while (exponent.Get() != "0")
             {
-                if (IsOdd(exponent)) result = Mod(Multiply(result, baseMod), modulus);
-                baseMod = Mod(Multiply(baseMod, baseMod), modulus);
+                if (IsOdd(exponent)) result = Mod(new GiantNumber(Multiply(result.Get(), baseMod.Get())), modulus);
+                baseMod = Mod(new GiantNumber(Multiply(baseMod.Get(), baseMod.Get())), modulus);
                 exponent = Divide(exponent, new GiantNumber("2"));
             }
             return result;
@@ -239,7 +216,7 @@ namespace GiantNumbersLibrary
         {
             if (divisor.Get() == "0") throw new DivideByZeroException("Деление на ноль!");
             GiantNumber quotient = Divide(dividend, divisor);
-            GiantNumber product = Multiply(quotient, divisor);
+            GiantNumber product = new GiantNumber(Multiply(quotient.Get(), divisor.Get()));
             return Subtract(dividend, product);
         }
         /// <summary>
@@ -272,7 +249,7 @@ namespace GiantNumbersLibrary
             {
                 tmp = Subtract(tmp, divisor);
                 if (Utils.Compare(tmp, divisor) < 0) IsReady = true;
-                else repeats = Sum(repeats, new GiantNumber("1"));
+                else repeats = new GiantNumber(Sum(repeats.Get(), "1"));
             }
 
             return repeats;
@@ -321,7 +298,7 @@ namespace GiantNumbersLibrary
         public static double TextLength(string text)
         {
             double lenght = 0;
-            foreach (char c in text) if (lenght != double.MaxValue) lenght++;
+            foreach (char c in text) lenght++;
             return lenght;
         }
         public static double ArrayLength(Dictionary<double, char> dict)
