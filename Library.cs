@@ -56,8 +56,8 @@ namespace GiantNumbersLibrary
         /// <summary>
         /// Сложение чисел
         /// </summary>
-        /// <param name="number1">Слогаемое</param>
-        /// <param name="number2">Слогаемое</param>
+        /// <param name="number1">Слaгаемое</param>
+        /// <param name="number2">Слaгаемое</param>
         public static string Sum(string longerNum, string shorterNum)
         {
             Dictionary<double, char> numMap1 = Utils.StringToCharList(longerNum);
@@ -92,6 +92,8 @@ namespace GiantNumbersLibrary
         /// <param name="number2">Вычитаемое</param>
         public static string Subtract(string longerNum, string shorterNum, double currentNum = 0)
         {
+            if (GiantNumbersComparing(longerNum, "<", shorterNum)) return "-1";
+
             Dictionary<double, char> numMap1 = Utils.StringToCharList(longerNum);
             Dictionary<double, char> numMap2 = Utils.StringToCharList(Utils.AddZeros(shorterNum, Utils.TextLength(longerNum)));
 
@@ -114,8 +116,9 @@ namespace GiantNumbersLibrary
                     result = resultDigit.ToString() + result;
                 }
             }
-            while(result[0] == '0' && Utils.TextLength(result) > 1)
-                result = Utils.TakeSymbols(result, 1, Utils.TextLength(result));
+            
+            if (transfer == 1) result = "1" + result;
+            while(result[0] == '0' && Utils.TextLength(result) > 1) result = Utils.TakeSymbols(result, 1, Utils.TextLength(result));
             return result;
         }
         /// <summary>
@@ -172,26 +175,6 @@ namespace GiantNumbersLibrary
             return guess;
         }
         /// <summary>
-        /// специально оптимизированный метод Substract для mod с целью ускорения работы 
-        /// </summary>
-        public static string Subtract_Mod(string longerNum, string shorterNum)
-        {
-            Dictionary<double, char> numMap1 = Utils.StringToCharList(longerNum);
-            Dictionary<double, char> numMap2 = Utils.StringToCharList(shorterNum);
-
-            string res = "";
-            double currentNum = 0;
-            
-            while (numMap2[currentNum] == 0) 
-                res = numMap1[currentNum] + res;
-                currentNum++;
-            
-            res = Subtract(Utils.TakeSymbols(longerNum, 0, currentNum), Utils.TakeSymbols(shorterNum, 0, currentNum)) + res;
-            if (res[0] == '0')
-                return Utils.TakeSymbols(res, 1, Utils.TextLength(res));
-            return res;
-        }
-        /// <summary>
         /// Получение среднего арифметического числа
         /// </summary>
         /// <param name="a">Число 1</param>
@@ -204,39 +187,23 @@ namespace GiantNumbersLibrary
         /// Возведение числа в степень и получение остатка от деления
         /// </summary>
         /// <param name="num">Число</param>
-        /// <param name="pow">Степень</param>
+        /// <param name="exponent">Степень</param>
         /// <param name="modulus">Делитель</param>
-        public static string ModPow(string num, string pow, string modulus)
+        public static string ModPow (string num, string exponent, string modulus)
         {
-            return Mod(Pow(num, pow), modulus);
-        }
-        /// <summary>
-        /// Получение остатка от деления
-        /// </summary>
-        /// <param name="dividend">Делимое</param>
-        /// <param name="divisor">Делитель</param>
-        public static string Mod(string dividend, string divisor)
-        {
-            if (divisor == "0") throw new DivideByZeroException("Деление на ноль!");
-            string subtrahend = "";
-            string originSubtrahend = "";
+            string result = "1";
+            num = Mod(num, modulus);
 
-            while (GiantNumbersComparing(divisor, "<", dividend))
-                subtrahend = divisor;
-                do
-                {
-                    subtrahend = subtrahend + "0";
-                } while (Utils.TextLength(subtrahend) != Utils.TextLength(dividend) - 1);
+            while (GiantNumbersComparing(exponent, ">", "0"))
+            {
+                if (Mod(exponent, "2") == "1") 
+                    result = Mod(Multiply(result, num), modulus);
+                
+                exponent = Divide(exponent, "2");
+                num = Mod(Multiply(num, num), modulus);
+            }
 
-                originSubtrahend = subtrahend;
-                do
-                {
-                    subtrahend = Sum(subtrahend, originSubtrahend);
-                } while (GiantNumbersComparing(dividend, ">", subtrahend));
-                    
-                dividend = Subtract_Mod(dividend, Subtract(subtrahend, originSubtrahend));
-
-            return dividend;  
+            return result;
         }
         /// <summary>
         /// Четное ли число?
@@ -249,7 +216,7 @@ namespace GiantNumbersLibrary
             return lastDigit == '1' || lastDigit == '3' || lastDigit == '5' || lastDigit == '7' || lastDigit == '9';
         }
         /// <summary>
-        /// Деление
+        /// Деление и получение остатка от деления
         /// </summary>
         /// <param name="dividend">Делимое</param>
         /// <param name="divisor">Делитель</param>
@@ -257,47 +224,59 @@ namespace GiantNumbersLibrary
         {
             if (divisor == "0") throw new DivideByZeroException("Деление на ноль!");
 
-            bool IsReady = false;
-            string repeats = "1";
-            string tmp = dividend;
-
-            while(!IsReady)
-            {
-                tmp = Subtract(tmp, divisor);
-                if (Utils.Compare(tmp, divisor) < 0) IsReady = true;
-                else repeats = Sum(repeats, "1");
-            }
+            string repeats = "";
+                
+            while(dividend != "-1")
+                dividend = Subtract(dividend, divisor);
+                repeats = Sum(repeats, "1");
 
             return repeats;
         }
+
+        public static string Mod(string dividend, string divisor)
+        {
+            string subtrahend = "";
+            string dividendPastIteration = "";
+
+            while(dividend != "-1")   
+            { 
+                subtrahend = divisor;
+                while (Utils.TextLength(dividend) - 1 > Utils.TextLength(subtrahend)) subtrahend = subtrahend + "0";
+                if (Utils.StringToCharList(dividend).Last().Value == subtrahend[0]) subtrahend = subtrahend + "0";
+
+                dividendPastIteration = dividend;
+                dividend = Subtract(dividend, subtrahend);
+            }
+
+            return dividendPastIteration;
+        }
         /// <summary> 
-        /// определение наибольшего числа
+        /// сравение чисел 
         /// </summary>
         public static bool GiantNumbersComparing (string num1, string operationType, string num2)
         {
             Dictionary<double, char> number1 = Utils.StringToCharList(Utils.GetLongestNum(num1, num2));
             Dictionary<double, char> number2 = Utils.StringToCharList(Utils.GetShortestNum(num1, num2));
 
-            if (Utils.TextLength(num1) > Utils.TextLength(num2)) return true;
-            if (Utils.TextLength(num1) < Utils.TextLength(num2)) return false;
-            
             double i = 0;
             switch (operationType)
             {
                 case ">": 
+                if (Utils.TextLength(num1) > Utils.TextLength(num2) || (num2[0] == '-' && num1[0] != '-') || num2 == "0") return true;
+                if (Utils.TextLength(num1) < Utils.TextLength(num2) || (num1[0] == '-' && num2[0] != '-') || num1 == "0") return false;
                 
                 for (i = 0; i < Utils.TextLength(Utils.GetLongestNum(num1, num2)); i++)
-                    if (int.Parse(number1[i].ToString()) < int.Parse(number2[i].ToString())) return false;
                     if (int.Parse(number1[i].ToString()) > int.Parse(number2[i].ToString())) return true;
+                    if (int.Parse(number1[i].ToString()) < int.Parse(number2[i].ToString())) return false;
                 return false;
 
                 case "<": 
-                if (Utils.TextLength(num1) > Utils.TextLength(num2)) return false;
-                if (Utils.TextLength(num1) < Utils.TextLength(num2)) return true;
+                if (Utils.TextLength(num1) < Utils.TextLength(num2) || (num1[0] == '-' && num2[0] != '-') || num1 == "0" ) return true;
+                if (Utils.TextLength(num1) > Utils.TextLength(num2) || (num2[0] == '-' && num1[0] != '-') || num2 == "0" ) return false;
 
                 for (i = 0; i < Utils.TextLength(Utils.GetLongestNum(num1, num2)); i++)
-                    if (int.Parse(number1[i].ToString()) < int.Parse(number2[i].ToString())) return true;
                     if (int.Parse(number1[i].ToString()) > int.Parse(number2[i].ToString())) return false;
+                    if (int.Parse(number1[i].ToString()) < int.Parse(number2[i].ToString())) return true;
                 return false;
 
                 default:
@@ -311,8 +290,7 @@ namespace GiantNumbersLibrary
         {
             Dictionary<double, char> str = StringToCharList(source);
             string res = "";
-            for (double i = fromWhatDigit; i < toWhatDigit; i++)
-                res = str[i] + res;
+            for (double i = fromWhatDigit; i < toWhatDigit; i++) res = str[i] + res;
             return res;
         }
         public static string AddZeros (string num, double limit)
@@ -341,7 +319,6 @@ namespace GiantNumbersLibrary
         {
             if (TextLength(number1) >= TextLength(number2)) return number1;
             else return number2;
-            return number2;
         }
         public static string GetShortestNum(string number1, string number2)
         {
@@ -353,13 +330,13 @@ namespace GiantNumbersLibrary
                 result = number2;
                 longestNum = number1;
             }
-            while (TextLength(longestNum) > TextLength(result)) result = ("0" + result);
+            while (TextLength(longestNum) > TextLength(result)) result = "0" + result;
             return result;
         }
         public static double TextLength(string text)
         {
             double lenght = 0;
-            foreach (char c in text)lenght++;
+            foreach (char c in text) lenght++;
             return lenght;
         }
         public static double ArrayLength(Dictionary<double, char> dict)
