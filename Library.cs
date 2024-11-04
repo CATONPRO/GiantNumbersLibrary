@@ -56,8 +56,8 @@ namespace GiantNumbersLibrary
         /// <summary>
         /// Сложение чисел
         /// </summary>
-        /// <param name="number1">Слaгаемое</param>
-        /// <param name="number2">Слaгаемое</param>
+        /// <param name="number1">Слогаемое</param>
+        /// <param name="number2">Слогаемое</param>
         public static string Sum(string longerNum, string shorterNum)
         {
             Dictionary<double, char> numMap1 = Utils.StringToCharList(longerNum);
@@ -124,17 +124,28 @@ namespace GiantNumbersLibrary
         /// <summary>
         /// Учножение чисел
         /// </summary>
-        /// <param name="num">Число</param>
+        /// <param name="number">Число</param>
         /// <param name="multiplier">Множитель</param>
-        public static string Multiply(string num, string multiplier)
+        public static string Multiply(string num1, string num2)
         {
-            string iterationNum = "1";
-            string res = num;
+            string number = Utils.GetLongestNum(num1, num2); // длинее
+            string multiplier = Utils.GetShortestNum(num1, num2); // короче
+            string res = "0";
+            string tmp = "";
+            string decrement = "";
 
-            while (iterationNum != multiplier)       
+            while (multiplier != "0")       
             {
-                iterationNum = Sum(iterationNum, "1");
-                res = Sum(res, num);
+                tmp = number;
+                decrement = "1";
+                
+                for (double i = 1; i < Utils.TextLength(multiplier); i++)
+                { 
+                    tmp += "0";
+                    decrement += "0";
+                }
+                multiplier = Subtract(multiplier, decrement);
+                res = Sum(Utils.GetLongestNum(tmp, res), Utils.GetShortestNum(tmp, res));
             }
             return res;
         }
@@ -187,33 +198,31 @@ namespace GiantNumbersLibrary
         /// Возведение числа в степень и получение остатка от деления
         /// </summary>
         /// <param name="num">Число</param>
-        /// <param name="exponent">Степень</param>
+        /// <param name="pow">Степень</param>
         /// <param name="modulus">Делитель</param>
-        public static string ModPow (string num, string exponent, string modulus)
+        public static string ModPow(string num, string pow, string modulus)
         {
-            string result = "1";
-            num = Mod(num, modulus);
+            string res = "1";
 
-            while (GiantNumbersComparing(exponent, ">", "0"))
+            while (pow != "1")
             {
-                if (Mod(exponent, "2") == "1") 
-                    result = Mod(Multiply(result, num), modulus);
-                
-                exponent = Divide(exponent, "2");
-                num = Mod(Multiply(num, num), modulus);
-            }
+                if (!IsEven(pow)) res = Mod(Multiply(res, num), modulus);
 
-            return result;
+                pow = Divide(pow, "2");
+                num = Mod(Multiply(num, num), modulus);
+            }    
+
+            return res;
         }
         /// <summary>
         /// Четное ли число?
         /// </summary>
         /// <param name="num">Число</param>
-        public static bool IsOdd(string num)
+        public static bool IsEven(string num)
         {
             Dictionary<double, char> charList = Utils.StringToCharList(num);
             char lastDigit = charList.Last().Value;
-            return lastDigit == '1' || lastDigit == '3' || lastDigit == '5' || lastDigit == '7' || lastDigit == '9';
+            return lastDigit == '2' || lastDigit == '4' || lastDigit == '6' || lastDigit == '8' || lastDigit == '0';
         }
         /// <summary>
         /// Деление и получение остатка от деления
@@ -224,20 +233,23 @@ namespace GiantNumbersLibrary
         {
             if (divisor == "0") throw new DivideByZeroException("Деление на ноль!");
 
-            string repeats = "";
-                
-            while(dividend != "-1")
+            string repeats = "0";
+
+            do
+            {
                 dividend = Subtract(dividend, divisor);
                 repeats = Sum(repeats, "1");
+            } while(dividend != "-1"); 
 
-            return repeats;
+            return Subtract(repeats, "1");
         }
 
         public static string Mod(string dividend, string divisor)
         {
+            if (GiantNumbersComparing(dividend, "<", divisor)) return dividend;
             string subtrahend = "";
             string dividendPastIteration = "";
-
+            
             while(dividend != "-1")   
             { 
                 subtrahend = divisor;
