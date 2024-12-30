@@ -225,7 +225,9 @@ namespace GiantNumbersLibrary
         public static string Sqrt(string num)
         {
             string res = "3";
-            
+            double oneHalfOfNumLength = Utils.TextLength(num) / 2;
+
+            for (double i = 1; i < oneHalfOfNumLength; i++) res += "0";
             while (Multiply(res, res) != num) res = Average(res, Divide(num, res));
 
             return res;
