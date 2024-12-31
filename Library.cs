@@ -100,7 +100,9 @@ namespace GiantNumbersLibrary
         /// <param name="number2">Вычитаемое</param>
          public static string Subtract(string longerNum, string shorterNum, double currentNum = 0)
          {
-            //if (IsBigger(shorterNum, longerNum)) return "-1";
+            // можно раскоментить и тогда будет чуть медленнее,
+            // но оно будет понимать, что одно число больше другого
+            //  if (IsBigger(shorterNum, longerNum)) return "-1";
     
             Dictionary<double, char> numMap1 = Utils.StringToCharList(longerNum);
             Dictionary<double, char> numMap2 = Utils.StringToCharList(Utils.AddZeros(shorterNum, Utils.TextLength(longerNum)));
@@ -173,10 +175,16 @@ namespace GiantNumbersLibrary
                 tmp += "0";
             }
 
-            while (iterationCounter.ToString() != multiplier_dict[i].ToString())
+            if (iterationCounter.ToString() != multiplier_dict[i].ToString())
             {
                 iterationCounter++;
                 res = Sum(Utils.GetLongestNum(tmp, res), Utils.GetShortestNum(tmp, res));
+            }
+            
+            while (iterationCounter.ToString() != multiplier_dict[i].ToString())
+            {
+                iterationCounter++;
+                res = Sum(res, tmp);
             }
 
             while (i != 1)       
