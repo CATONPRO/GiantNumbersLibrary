@@ -67,9 +67,10 @@ namespace GiantNumbersLibrary
             string result = "";
             byte transfer = 0;
             int resultDigit = 0;
+            double numMap2Length = Utils.ArrayLength(numMap2);
             double numMap1Length = Utils.ArrayLength(numMap1);
 
-            while (currentNum != numMap1Length)
+            while (currentNum != numMap2Length)
             {
                 resultDigit = int.Parse(numMap1[currentNum].ToString()) + int.Parse(numMap2[currentNum].ToString()) + transfer;
                 currentNum++;
@@ -80,6 +81,12 @@ namespace GiantNumbersLibrary
                 }
                 else transfer = 0;
                 result = resultDigit.ToString() + result;
+            }
+
+            while (currentNum != numMap1Length)
+            {
+                result += numMap1[currentNum];
+                currentNum++;
             }
 
             if (transfer == 1) return "1" + result;
