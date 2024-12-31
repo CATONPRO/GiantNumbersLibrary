@@ -218,9 +218,9 @@ namespace GiantNumbersLibrary
         {
             string res = "5";
 
-            double HalfOfNumLength = Utils.TextLength(num) / 2;
+            double HalfOfNumLengthPlusOne = Utils.TextLength(num) / 2 + 1;
             
-            for (double i = 1; i < HalfOfNumLength; i++) res += "0";
+            for (double i = 1; i < HalfOfNumLengthPlusOne; i++) res += "0";
 
             while (Multiply(res, res) != num) res = Average(res, Divide(num, res));
 
@@ -282,13 +282,13 @@ namespace GiantNumbersLibrary
             string repeats = "0";
             string subtrahend = divisor;
             string increment_rep = "1";
-            double subtrahendLengthPlusOne = Utils.TextLength(subtrahend) + 1;
+            double subtrahendLength = Utils.TextLength(subtrahend);
             double dividendLength = Utils.TextLength(dividend);
 
             // первая итерация вынесена по той причине что и в Myltiply
-            while (subtrahendLengthPlusOne != dividendLength)
+            while (subtrahendLength + 1 < dividendLength)
             {
-                subtrahendLengthPlusOne++;
+                subtrahendLength++;
                 subtrahend += "0";
                 increment_rep += "0";
             }
@@ -310,11 +310,11 @@ namespace GiantNumbersLibrary
                 increment_rep = "1";
                 subtrahend = divisor;
                 dividendLength = Utils.TextLength(dividend);
-                subtrahendLengthPlusOne = Utils.TextLength(subtrahend) + 1;
+                subtrahendLength = Utils.TextLength(subtrahend);
 
-                while (subtrahendLengthPlusOne < dividendLength)
+                while (subtrahendLength + 1 < dividendLength)
                 {
-                    subtrahendLengthPlusOne++;
+                    subtrahendLength++;
                     subtrahend += "0";
                     increment_rep += "0";
                 }
