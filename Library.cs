@@ -58,6 +58,14 @@ namespace GiantNumbersLibrary
     }
     public static class GiantNumbersOperations
     {
+        private static readonly string Version = "1.1";
+        private static readonly string Build = "0C";
+        private static readonly string VersionType = "release";
+
+        public static string VersionInfo()
+        {
+            return $"v.{Version} {VersionType} (Build {Build})";
+        }
         /// <summary>
         /// Сложение чисел
         /// </summary>
@@ -102,8 +110,8 @@ namespace GiantNumbersLibrary
         /// </summary>
         /// <param name="number1">Вычитаемое</param>
         /// <param name="number2">Вычитаемое</param>
-         public static string Subtract(string longerNum, string shorterNum)
-         {
+        public static string Subtract(string longerNum, string shorterNum)
+        {
             // можно раскоментить и тогда будет чуть медленнее,
             // но оно будет понимать, что одно число больше другого
             //  if (IsBigger(shorterNum, longerNum)) return "-1";
