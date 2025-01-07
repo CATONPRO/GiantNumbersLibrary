@@ -1,7 +1,11 @@
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.Mail;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -67,8 +71,8 @@ namespace GiantNumbersLibrary
             string result = "";
             byte transfer = 0;
             int resultDigit = 0;
-            double numMap2Length = Utils.ArrayLength(numMap2);
             double numMap1Length = Utils.ArrayLength(numMap1);
+            double numMap2Length = Utils.ArrayLength(numMap2);
 
             while (currentNum != numMap2Length)
             {
@@ -98,7 +102,7 @@ namespace GiantNumbersLibrary
         /// </summary>
         /// <param name="number1">Вычитаемое</param>
         /// <param name="number2">Вычитаемое</param>
-         public static string Subtract(string longerNum, string shorterNum, double currentNum = 0)
+         public static string Subtract(string longerNum, string shorterNum)
          {
             // можно раскоментить и тогда будет чуть медленнее,
             // но оно будет понимать, что одно число больше другого
@@ -107,11 +111,14 @@ namespace GiantNumbersLibrary
             Dictionary<double, char> numMap1 = Utils.StringToCharList(longerNum);
             Dictionary<double, char> numMap2 = Utils.StringToCharList(Utils.AddZeros(shorterNum, Utils.TextLength(longerNum)));
 
+            double currentNum = 0;
             string result = "";
             byte transfer = 0;
             int resultDigit = 0;
+            double numMap1Length = Utils.ArrayLength(numMap1);
+            double numMap2Length = Utils.ArrayLength(numMap2);
 
-            foreach (char Char in numMap1.Values)
+            while (currentNum != numMap2Length)
             {
                 resultDigit = int.Parse(numMap1[currentNum].ToString()) - int.Parse(numMap2[currentNum].ToString()) - transfer;
                 currentNum++;
@@ -127,11 +134,17 @@ namespace GiantNumbersLibrary
                 }
             }
 
+            while (currentNum != numMap1Length)
+            {
+                result = numMap1[currentNum] + result;
+                currentNum++;
+            }
+
             try
             {
                 while (result[0] == '0') result = ("q" + result).Replace("q0", "");
             }
-            catch (Exception e)
+            catch
             {
                 return "0";
             }
@@ -159,7 +172,7 @@ namespace GiantNumbersLibrary
             // в начале главного цикла первым делом происходит вычитание единицы из i, то i составляет длину
             // multiplier_dict, а не максимальный индекс в нем
             double i = Utils.ArrayLength(multiplier_dict);
-            
+
             // из-за нюансов метода Sum первый аргумент должен быть длиннее второго,
             // что позволяет сделать опциональной проверку длин аргументов,
             // поэтому первая итерация цикла вне его основной конструкции
@@ -180,14 +193,14 @@ namespace GiantNumbersLibrary
                 iterationCounter++;
                 res = Sum(Utils.GetLongestNum(tmp, res), Utils.GetShortestNum(tmp, res));
             }
-            
+
             while (iterationCounter.ToString() != multiplier_dict[i].ToString())
             {
                 iterationCounter++;
                 res = Sum(res, tmp);
             }
 
-            while (i != 1)       
+            while (i != 1)
             {
                 i--;
                 tmp = number;
@@ -231,13 +244,55 @@ namespace GiantNumbersLibrary
         /// <param name="num">Число</param>
         public static string Sqrt(string num)
         {
-            string res = "5";
+            string res = "";
+            string oldRes = "";
+            double numFirstTwoDigitsToInt = Convert.ToInt32(num[0].ToString() + num[1].ToString());
+            double approximateResLength = Utils.TextLength(num) / 2;
 
-            double HalfOfNumLengthPlusOne = Utils.TextLength(num) / 2 + 1;
-            
-            for (double i = 1; i < HalfOfNumLengthPlusOne; i++) res += "0";
+            if (approximateResLength / 2 % 1 == 0)
+            {
+                if (numFirstTwoDigitsToInt <= 12) res = "3";
+                else if (numFirstTwoDigitsToInt <= 20) res = "4";
+                else if (numFirstTwoDigitsToInt <= 30) res = "5";
+                else if (numFirstTwoDigitsToInt <= 42) res = "6";
+                else if (numFirstTwoDigitsToInt <= 56) res = "7";
+                else if (numFirstTwoDigitsToInt <= 72) res = "8";
+                else res = "9";
+            }
+            else
+            {
+                if (numFirstTwoDigitsToInt <= 11) res = "11";
+                else if (numFirstTwoDigitsToInt <= 15) res = "12";
+                else if (numFirstTwoDigitsToInt <= 18) res = "13";
+                else if (numFirstTwoDigitsToInt <= 21) res = "14";
+                else if (numFirstTwoDigitsToInt <= 24) res = "15";
+                else if (numFirstTwoDigitsToInt <= 27) res = "16";
+                else if (numFirstTwoDigitsToInt <= 31) res = "17";
+                else if (numFirstTwoDigitsToInt <= 34) res = "18";
+                else if (numFirstTwoDigitsToInt <= 38) res = "19";
+                else if (numFirstTwoDigitsToInt <= 42) res = "20";
+                else if (numFirstTwoDigitsToInt <= 46) res = "21";
+                else if (numFirstTwoDigitsToInt <= 51) res = "22";
+                else if (numFirstTwoDigitsToInt <= 55) res = "23";
+                else if (numFirstTwoDigitsToInt <= 60) res = "24";
+                else if (numFirstTwoDigitsToInt <= 65) res = "25";
+                else if (numFirstTwoDigitsToInt <= 70) res = "26";
+                else if (numFirstTwoDigitsToInt <= 76) res = "27";
+                else if (numFirstTwoDigitsToInt <= 81) res = "28";
+                else if (numFirstTwoDigitsToInt <= 87) res = "29";
+                else if (numFirstTwoDigitsToInt <= 93) res = "30";
+                else res = "31";
+                approximateResLength--;
+            }
 
-            while (Multiply(res, res) != num) res = Average(res, Divide(num, res));
+            for (double i = 1; i < approximateResLength; i++) res += "0";
+
+            while (oldRes != res)
+            {
+                Console.WriteLine(res);
+                res = Average(res, Divide(num, res));
+                oldRes = res;
+            }
 
             return res;
         }
@@ -260,18 +315,20 @@ namespace GiantNumbersLibrary
         /// <param name="modulus">Делитель</param>
         public static string ModPow(string num, string pow, string modulus)
         {
+            if (modulus == "0") throw new DivideByZeroException("модуль не может быть нулём");
+            if (modulus == "1") return "0";
+
             string res = "1";
+
             num = Mod(num, modulus);
 
             while (pow != "0")
             {
                 if (!IsEven(pow)) res = Mod(Multiply(res, num), modulus);
-
-                num = Mod(Multiply(num, num), modulus);
-                if (!IsEven(pow)) pow = Subtract(pow, "1");
                 pow = Divide(pow, "2");
+                num = Mod(Multiply(num, num), modulus);
             }
-
+            
             return res;
         }
 
@@ -281,8 +338,9 @@ namespace GiantNumbersLibrary
         /// <param name="num">Число</param>
         public static bool IsEven(string num)
         {
-            char lastDigit = Utils.StringToCharList(num).Last().Value;
-            return lastDigit == '2' || lastDigit == '4' || lastDigit == '6' || lastDigit == '8' || lastDigit == '0';
+            char lastDigit = Utils.StringToCharList(num)[1];
+
+            return (lastDigit == '2' || lastDigit == '4' || lastDigit == '6' || lastDigit == '8' || lastDigit == '0');
         }
         /// <summary>
         /// Деление 
@@ -297,13 +355,13 @@ namespace GiantNumbersLibrary
             string repeats = "0";
             string subtrahend = divisor;
             string increment_rep = "1";
-            double subtrahendLength = Utils.TextLength(subtrahend);
+            double subtrahendLengthPlusOne = Utils.TextLength(subtrahend) + 1;
             double dividendLength = Utils.TextLength(dividend);
 
             // первая итерация вынесена по той причине что и в Myltiply
-            while (subtrahendLength + 1 < dividendLength)
+            while (subtrahendLengthPlusOne < dividendLength)
             {
-                subtrahendLength++;
+                subtrahendLengthPlusOne++;
                 subtrahend += "0";
                 increment_rep += "0";
             }
@@ -325,11 +383,11 @@ namespace GiantNumbersLibrary
                 increment_rep = "1";
                 subtrahend = divisor;
                 dividendLength = Utils.TextLength(dividend);
-                subtrahendLength = Utils.TextLength(subtrahend);
+                subtrahendLengthPlusOne = Utils.TextLength(subtrahend) + 1;
 
-                while (subtrahendLength + 1 < dividendLength)
+                while (subtrahendLengthPlusOne < dividendLength)
                 {
-                    subtrahendLength++;
+                    subtrahendLengthPlusOne++;
                     subtrahend += "0";
                     increment_rep += "0";
                 }
@@ -378,11 +436,14 @@ namespace GiantNumbersLibrary
         {    
             Dictionary<double, char> number1 = Utils.StringToCharList(Utils.GetShortestNum(num1, num2));
             Dictionary<double, char> number2 = Utils.StringToCharList(Utils.GetLongestNum(num1, num2));
+            
+            double num1Length = Utils.TextLength(num1);
+            double num2Length = Utils.TextLength(num2);
 
-            if (Utils.TextLength(num1) > Utils.TextLength(num2)) return true;
-            if (Utils.TextLength(num1) < Utils.TextLength(num2)) return false;
-                
-            for (double i = Utils.TextLength(num1); i != 0; i--)
+            if (num1Length > num2Length) return true;
+            if (num1Length < num2Length) return false;
+
+            for (double i = num1Length; i != 0; i--)
             {
                 if (int.Parse(number1[i].ToString()) > int.Parse(number2[i].ToString())) return true;
                 if (int.Parse(number1[i].ToString()) < int.Parse(number2[i].ToString())) return false;
@@ -399,10 +460,13 @@ namespace GiantNumbersLibrary
             Dictionary<double, char> number1 = Utils.StringToCharList(Utils.GetShortestNum(num1, num2));
             Dictionary<double, char> number2 = Utils.StringToCharList(Utils.GetLongestNum(num1, num2));
 
-            if (Utils.TextLength(num1) > Utils.TextLength(num2)) return true;
-            if (Utils.TextLength(num1) < Utils.TextLength(num2)) return false;
+            double num1Length = Utils.TextLength(num1);
+            double num2Length = Utils.TextLength(num2);
+
+            if (num1Length > num2Length) return true;
+            if (num1Length < num2Length) return false;
                 
-            for (double i = Utils.TextLength(num1); i != 0; i--)
+            for (double i = num1Length; i != 0; i--)
             {
                 if (int.Parse(number1[i].ToString()) > int.Parse(number2[i].ToString())) return true;
                 if (int.Parse(number1[i].ToString()) < int.Parse(number2[i].ToString())) return false;
@@ -450,9 +514,16 @@ namespace GiantNumbersLibrary
                 result = number2;
                 longestNum = number1;
             }
+
+            double longestNumLength = TextLength(longestNum);
+            double resultLength = TextLength(result);
             
-            while (TextLength(longestNum) > TextLength(result)) result = "0" + result;
-            
+            while (longestNumLength > resultLength)
+            {
+                result = "0" + result;
+                resultLength++;
+            }
+
             return result;
         }
         public static double TextLength(string text)
