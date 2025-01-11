@@ -107,23 +107,21 @@ namespace GiantNumbersLibrary
             // можно раскоментить и тогда будет чуть медленнее,
             // но оно будет понимать, что одно число больше другого
             //  if (IsBigger(shorterNum, longerNum)) return "-1";
-    
+
             Dictionary<double, char> numMap1 = Utils.StringToCharList(longerNum);
             Dictionary<double, char> numMap2 = Utils.StringToCharList(Utils.AddZeros(shorterNum, Utils.TextLength(longerNum)));
 
-            double currentNum = 0;
             string result = "";
-            byte transfer = 0;
+            int transfer = 0;
             int resultDigit = 0;
-            double numMap1Length = Utils.ArrayLength(numMap1);
-            double numMap2Length = Utils.ArrayLength(numMap2);
+            double currentNum = 1;
 
-            while (currentNum != numMap2Length)
+            try
             {
-                resultDigit = int.Parse(numMap1[currentNum].ToString()) - int.Parse(numMap2[currentNum].ToString()) - transfer;
-                currentNum++;
-                if (currentNum != 1)
+                while (true)
                 {
+                    resultDigit = int.Parse(numMap1[currentNum].ToString()) - int.Parse(numMap2[currentNum].ToString()) - transfer;
+                    currentNum++;
                     if (resultDigit < 0)
                     {
                         resultDigit += 10;
@@ -132,24 +130,21 @@ namespace GiantNumbersLibrary
                     else transfer = 0;
                     result = resultDigit.ToString() + result;
                 }
-            }
 
-            while (currentNum != numMap1Length)
+            } catch
             {
-                result = numMap1[currentNum] + result;
-                currentNum++;
+                if (transfer == 1) result = "1" + result;
+                try
+                {
+                    while (result[0] == '0') result = ("q" + result).Replace("q0", "");
+                }
+                catch
+                {
+                    return "0";
+                }
+            
+                return result;
             }
-
-            try
-            {
-                while (result[0] == '0') result = ("q" + result).Replace("q0", "");
-            }
-            catch
-            {
-                return "0";
-            }
-
-            return result;
         }
         /// <summary>
         /// Умножение чисел
@@ -228,6 +223,9 @@ namespace GiantNumbersLibrary
         /// <param name="pow">Степень</param>
         public static string Pow(string num, string pow)
         {
+            if (pow == "0") return "1";
+            if (pow == "1") return num;
+
             string res = num;
 
             while (pow != "1")
@@ -249,7 +247,7 @@ namespace GiantNumbersLibrary
             double numFirstTwoDigitsToInt = Convert.ToInt32(num[0].ToString() + num[1].ToString());
             double approximateResLength = Utils.TextLength(num) / 2;
 
-            if (approximateResLength / 2 % 1 == 0)
+            if (approximateResLength % 1 == 0)
             {
                 if (numFirstTwoDigitsToInt <= 12) res = "3";
                 else if (numFirstTwoDigitsToInt <= 20) res = "4";
@@ -284,14 +282,14 @@ namespace GiantNumbersLibrary
                 else res = "31";
                 approximateResLength--;
             }
-
+            
             for (double i = 1; i < approximateResLength; i++) res += "0";
 
             while (oldRes != res)
             {
                 Console.WriteLine(res);
-                res = Average(res, Divide(num, res));
                 oldRes = res;
+                res = Average(res, Divide(num, res));
             }
 
             return res;
@@ -398,6 +396,7 @@ namespace GiantNumbersLibrary
                     dividend = Subtract(dividend, subtrahend);
                 }
             }
+
             return repeats;
         }
 
