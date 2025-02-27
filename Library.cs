@@ -206,6 +206,7 @@ namespace GiantNumbersLibrary
             {
                 if (d == "") d = "0";
             }
+
             // z0
             string ac = Multiply_PowsOfTwo(a, c);
             // z2
@@ -242,6 +243,7 @@ namespace GiantNumbersLibrary
             string multiplier = "";
             if (number == num1) multiplier = num2;
             if (number == num2) multiplier = num1;
+
             string res = "0";
             string tmp = number;
             string decrement = "1";
@@ -306,13 +308,25 @@ namespace GiantNumbersLibrary
             if (pow == "0") return "1";
             if (pow == "1") return num;
 
-            string res = num;
+            string maxPowOfTwo = "1";
+            while (IsBigger(pow, maxPowOfTwo)) maxPowOfTwo = Multiply(maxPowOfTwo, "2");
+            maxPowOfTwo = Divide(maxPowOfTwo, "2");
 
-            while (pow != "1")
+            string remainder = Subtract(pow, maxPowOfTwo);
+            string res = num;
+            
+            while (maxPowOfTwo != "1")
             {
-                pow = Subtract(pow, "1");
-                res = Multiply(res, num);
+                maxPowOfTwo = Divide(maxPowOfTwo, "2");
+                res = Multiply(res, res);   
             }
+
+            while (remainder != "0")
+            {
+                res = Multiply(res, num);
+                remainder = Subtract(remainder, "1");
+            }
+
             return res;
         }
 
@@ -759,11 +773,10 @@ namespace GiantNumbersLibrary
             }
         }
 
-
         public static Dictionary<double, char> StringToCorrectCharList(string str)
         {
             double lenght = 0;
-            Dictionary<double, char> map = ArrayAddEmpty(lenght - 1);
+            Dictionary<double, char> map = new Dictionary<double, char>();
             foreach (char Char in str)
             {
                 map[lenght] = Char;
