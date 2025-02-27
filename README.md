@@ -1,7 +1,7 @@
 ## GiantNumbersLibrary
 > C# library (.NET 8.0) for working with giant numbers
 
-Current version: 1.1 release (build 0C)
+Current version: 2.0 release (build 0C)
 
 🔗 [Release](https://github.com/CATONPRO/GiantNumbersLibrary/releases/tag/release)
 
