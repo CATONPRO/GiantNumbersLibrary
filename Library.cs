@@ -52,8 +52,8 @@ namespace GiantNumbersLibrary
         /// <summary>
         /// Сложение чисел
         /// </summary>
-        /// <param name="number1">Слогаемое</param>
-        /// <param name="number2">Слогаемое</param>
+        /// <param name="number1">Слагаемое</param>
+        /// <param name="number2">Слагаемое</param>
         public static string Sum(string longerNum, string shorterNum)
         {
             Dictionary<double, char> numMap1 = Utils.StringToCharList(longerNum);
@@ -61,28 +61,23 @@ namespace GiantNumbersLibrary
 
             string result = "";
             int transfer = 0;
+            double currentNum = 0;
             int resultDigit = 0;
-            double currentNum = 1;
 
-            try
+            foreach (char Char in numMap1.Values)
             {
-                while (true)
+                resultDigit = int.Parse(numMap1[currentNum].ToString()) + int.Parse(numMap2[currentNum].ToString()) + transfer;
+                currentNum++;
+                if (resultDigit >= 10)
                 {
-                    resultDigit = int.Parse(numMap1[currentNum].ToString()) + int.Parse(numMap2[currentNum].ToString()) + transfer;
-                    currentNum++;
-                    if (resultDigit >= 10)
-                    {
-                        resultDigit -= 10;
-                        transfer = 1;
-                    }
-                    else transfer = 0;
-                    result = resultDigit.ToString() + result;
+                    resultDigit -= 10;
+                    transfer = 1;
                 }
+                else transfer = 0;
+                if (currentNum != 1) result = resultDigit.ToString() + result;
             }
-            catch
-            {
-                if (transfer == 1) return "1" + result;
-            }
+            
+            if (transfer == 1) return "1" + result;
             
             return result;
         }
