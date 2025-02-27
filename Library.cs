@@ -1,13 +1,4 @@
-using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Net.Mail;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace GiantNumbersLibrary
 {
@@ -58,51 +49,41 @@ namespace GiantNumbersLibrary
     }
     public static class GiantNumbersOperations
     {
-        private static readonly string Version = "1.1";
-        private static readonly string Build = "0C";
-        private static readonly string VersionType = "release";
-
-        public static string VersionInfo()
-        {
-            return $"v.{Version} {VersionType} (Build {Build})";
-        }
         /// <summary>
         /// Сложение чисел
         /// </summary>
         /// <param name="number1">Слогаемое</param>
         /// <param name="number2">Слогаемое</param>
-        public static string Sum(string longerNum, string shorterNum, double currentNum = 1)
+        public static string Sum(string longerNum, string shorterNum)
         {
             Dictionary<double, char> numMap1 = Utils.StringToCharList(longerNum);
-            Dictionary<double, char> numMap2 = Utils.StringToCharList(Utils.AddZeros(shorterNum, Utils.TextLength(longerNum)));
+            Dictionary<double, char> numMap2 = Utils.StringToCharList(Utils.AddZeros_Beginning(shorterNum, Utils.TextLength(longerNum)));
 
             string result = "";
-            byte transfer = 0;
+            int transfer = 0;
             int resultDigit = 0;
-            double numMap1Length = Utils.ArrayLength(numMap1);
-            double numMap2Length = Utils.ArrayLength(numMap2);
+            double currentNum = 1;
 
-            while (currentNum != numMap2Length)
+            try
             {
-                resultDigit = int.Parse(numMap1[currentNum].ToString()) + int.Parse(numMap2[currentNum].ToString()) + transfer;
-                currentNum++;
-                if (resultDigit >= 10)
+                while (true)
                 {
-                    resultDigit -= 10;
-                    transfer = 1;
+                    resultDigit = int.Parse(numMap1[currentNum].ToString()) + int.Parse(numMap2[currentNum].ToString()) + transfer;
+                    currentNum++;
+                    if (resultDigit >= 10)
+                    {
+                        resultDigit -= 10;
+                        transfer = 1;
+                    }
+                    else transfer = 0;
+                    result = resultDigit.ToString() + result;
                 }
-                else transfer = 0;
-                result = resultDigit.ToString() + result;
             }
-
-            while (currentNum != numMap1Length)
+            catch
             {
-                result += numMap1[currentNum];
-                currentNum++;
+                if (transfer == 1) return "1" + result;
             }
-
-            if (transfer == 1) return "1" + result;
-
+            
             return result;
         }
         /// <summary>
@@ -115,23 +96,21 @@ namespace GiantNumbersLibrary
             // можно раскоментить и тогда будет чуть медленнее,
             // но оно будет понимать, что одно число больше другого
             //  if (IsBigger(shorterNum, longerNum)) return "-1";
-    
+
             Dictionary<double, char> numMap1 = Utils.StringToCharList(longerNum);
-            Dictionary<double, char> numMap2 = Utils.StringToCharList(Utils.AddZeros(shorterNum, Utils.TextLength(longerNum)));
+            Dictionary<double, char> numMap2 = Utils.StringToCharList(Utils.AddZeros_Beginning(shorterNum, Utils.TextLength(longerNum)));
 
-            double currentNum = 0;
             string result = "";
-            byte transfer = 0;
+            int transfer = 0;
             int resultDigit = 0;
-            double numMap1Length = Utils.ArrayLength(numMap1);
-            double numMap2Length = Utils.ArrayLength(numMap2);
+            double currentNum = 1;
 
-            while (currentNum != numMap2Length)
+            try
             {
-                resultDigit = int.Parse(numMap1[currentNum].ToString()) - int.Parse(numMap2[currentNum].ToString()) - transfer;
-                currentNum++;
-                if (currentNum != 1)
+                while (true)
                 {
+                    resultDigit = int.Parse(numMap1[currentNum].ToString()) - int.Parse(numMap2[currentNum].ToString()) - transfer;
+                    currentNum++;
                     if (resultDigit < 0)
                     {
                         resultDigit += 10;
@@ -140,95 +119,183 @@ namespace GiantNumbersLibrary
                     else transfer = 0;
                     result = resultDigit.ToString() + result;
                 }
-            }
 
-            while (currentNum != numMap1Length)
-            {
-                result = numMap1[currentNum] + result;
-                currentNum++;
-            }
-
-            try
-            {
-                while (result[0] == '0') result = ("q" + result).Replace("q0", "");
             }
             catch
             {
-                return "0";
-            }
+                if (transfer == 1) result = "1" + result;
+                try
+                {
+                    while (result[0] == '0') result = ("q" + result).Replace("q0", "");
+                }
+                catch
+                {
+                    return "0";
+                }
 
-            return result;
+                return result;
+            }
         }
         /// <summary>
         /// Умножение чисел
         /// </summary>
         /// <param name="number">Число</param>
         /// <param name="multiplier">Множитель</param>
-        public static string Multiply(string num1, string num2)
+        public static string Multiply (string num1, string num2)
         {
+            string longerNum = Utils.GetLongestNum(num1, num2);
+            string shorterNum;
+            if (longerNum == num1) shorterNum = num2;
+            else shorterNum = num1;
+            double shorterNumLength = Utils.TextLength(shorterNum);
+            double longerNumLength = Utils.TextLength(longerNum);
+            if (shorterNumLength < 33) return MultiplyClassic(longerNum, shorterNum);
+            double smallestPowerOfTwo = 1;
+            while (smallestPowerOfTwo < shorterNumLength) smallestPowerOfTwo = smallestPowerOfTwo * 2;
+            smallestPowerOfTwo = smallestPowerOfTwo / 2; 
+            string shorterNum_Left = Utils.TakeSymbols(shorterNum, 0, smallestPowerOfTwo);
+            string shorterNum_Right = Utils.TakeSymbols_ToTheEnd(shorterNum, smallestPowerOfTwo);
+            string longerNum_Left = Utils.TakeSymbols(longerNum, 0, smallestPowerOfTwo);
+            string longerNum_Right = Utils.TakeSymbols_ToTheEnd(longerNum, smallestPowerOfTwo);
+
+            return Sum(Utils.AddZeros_Ending(Multiply_PowsOfTwo(longerNum_Left, shorterNum_Left), longerNumLength + shorterNumLength - smallestPowerOfTwo - smallestPowerOfTwo), MultiplyClassic(longerNum_Right, shorterNum_Right));
+        }
+        /// <summary>
+        /// Карацубовский способ умножения, он быстрее, но работает только со степенями двоек
+        /// </summary>
+        /// <param name="number">Число</param>
+        /// <param name="multiplier">Множитель</param>
+        public static string Multiply_PowsOfTwo(string num1, string num2)
+        {
+            double num1Length = Utils.TextLength(num1);
+            double num2Length = Utils.TextLength(num2);
+
+            if (num2Length < 33 || num1Length < 33)
+            {
+                return MultiplyClassic(num1, num2);
+            }
+
+            double n = Math.Max(num1Length, num2Length);
+            double m = Math.Floor(Math.Min(num1Length, num2Length) / 2);
+            string a = Utils.TakeSymbols(num1, 0, Math.Ceiling(num1Length / 2));
+            string b = Utils.TakeSymbols_ToTheEnd(num1, Math.Ceiling(num1Length / 2));
+            string c = Utils.TakeSymbols(num2, 0, Math.Ceiling(num2Length / 2));
+            string d = Utils.TakeSymbols_ToTheEnd(num2, Math.Ceiling(num2Length / 2));
+
+            // если мы будем умножать например 123 на 043 будет некруто
+            try
+            {
+                while (b[0] == '0')
+                {
+                    b = Utils.TakeSymbols_ToTheEnd(b, 1);
+                    a = a + '0';
+                }
+            } catch
+            {
+                if (b == "") b = "0";
+            }
+
+            try
+            {
+                while (d[0] == '0')
+                {
+                    d = Utils.TakeSymbols_ToTheEnd(d, 1);
+                    c = c + '0';
+                }
+            } catch
+            {
+                if (d == "") d = "0";
+            }
+            // z0
+            string ac = Multiply_PowsOfTwo(a, c);
+            // z2
+            string bd = Multiply_PowsOfTwo(b, d);
+            // вспомогательные переменные для tmp1 и tmp2
+            double aLength = Utils.TextLength(a);
+            double bLength = Utils.TextLength(b);
+            double cLength = Utils.TextLength(c);
+            double dLength = Utils.TextLength(d);
+            // tmp1 и tmp2 используются для временного хранения, ведь если мы зотим сравнить две суммы, чтобы засунуть
+            // их в сумму побольше, их придется сравнивать из за нюанса Sum. (Сначала бОльшее число, потом меньшее)
+            string tmp1 = Sum(a, d);
+            string tmp2 = Sum(c, b);
+            // вспомогательные для ab_cd (z1)
+            double tmp1Length = Utils.TextLength(tmp1);
+            double tmp2Length = Utils.TextLength(tmp2);
+            double acLength = Utils.TextLength(ac);
+            double bdLength = Utils.TextLength(bd);
+            // z1
+            string ab_cd = Subtract( Multiply_PowsOfTwo( Utils.GetLongestNum(tmp1, tmp2, tmp1Length, tmp2Length), Utils.GetShortestNum(tmp1, tmp2, tmp1Length, tmp2Length) ), Sum( Utils.GetLongestNum(ac, bd, acLength, bdLength), Utils.GetShortestNum(ac, bd, acLength, bdLength)));
+            return Sum(Utils.AddZeros_Ending(ac, 2 * m), Sum(Utils.AddZeros_Ending(ab_cd, m), bd));
+        }
+
+        /// <summary>
+        /// Классическое умножение
+        /// </summary>
+        /// <param name="number">Число</param>
+        /// <param name="multiplier">Множитель</param>
+        public static string MultiplyClassic(string num1, string num2)
+        {
+            if (num1 == "0" || num2 == "0") return "0";
+
             string number = Utils.GetLongestNum(num1, num2);
-            string multiplier = Utils.GetShortestNum(num1, num2);
+            string multiplier = "";
+            if (number == num1) multiplier = num2;
+            if (number == num2) multiplier = num1;
             string res = "0";
-            string tmp = "";
-            int iterationCounter;
-            Dictionary<double, char> multiplier_dict;
+            string tmp = number;
+            string decrement = "1";
+            double multiplerLength = Utils.TextLength(multiplier);
 
-            if (number == num1) multiplier_dict = Utils.StringToCharList(num2);
-            else multiplier_dict = Utils.StringToCharList(num1);
-
-            // i определяет индекс цифры в множителе в виде Dictionary<double, char>, но из-за того что 
-            // в начале главного цикла первым делом происходит вычитание единицы из i, то i составляет длину
-            // multiplier_dict, а не максимальный индекс в нем
-            double i = Utils.ArrayLength(multiplier_dict);
-
-            // из-за нюансов метода Sum первый аргумент должен быть длиннее второго,
-            // что позволяет сделать опциональной проверку длин аргументов,
-            // поэтому первая итерация цикла вне его основной конструкции
-            // т. к. изначально длина res = 1 а длина tmp не может быть < 1
-            // что позволяет убрать повторяющуюся проверку в главном цикле
-            i--;
-            tmp = number;
-            iterationCounter = 0;
-
-            // смотрит в каком разряде и добавляет соответствующее количество нулей
-            for (double I = 1; I != i; I++)
+            for (double I = 1; I < multiplerLength; I++)
             {
                 tmp += "0";
+                decrement += "0";
             }
 
-            if (iterationCounter.ToString() != multiplier_dict[i].ToString())
-            {
-                iterationCounter++;
-                res = Sum(Utils.GetLongestNum(tmp, res), Utils.GetShortestNum(tmp, res));
-            }
+            multiplier = Subtract(multiplier, decrement);
+            res = Sum(tmp, res);
 
-            while (iterationCounter.ToString() != multiplier_dict[i].ToString())
+            while (multiplier != "0")
             {
-                iterationCounter++;
-                res = Sum(res, tmp);
-            }
-
-            while (i != 1)
-            {
-                i--;
                 tmp = number;
-                iterationCounter = 0;
+                decrement = "1";
+                multiplerLength = Utils.TextLength(multiplier);
 
-                for (double I = 1; I != i; I++)
+                for (double i = 1; i < multiplerLength; i++)
                 {
                     tmp += "0";
+                    decrement += "0";
                 }
-
-                while (iterationCounter.ToString() != multiplier_dict[i].ToString())
-                {
-                    iterationCounter++;
-                    res = Sum(res, tmp);
-                }
+                multiplier = Subtract(multiplier, decrement);
+                res = Sum(res, tmp);
             }
-
             return res;
         }
 
+        /// <summary>
+        /// Факториал
+        /// </summary>
+        /// <param name="num">Число</param>
+        public static string Factorial(double num)
+        {
+            string res1 = "1";
+            string res2 = "1";
+
+            while (num != Math.Floor(num / 2))
+            {
+                res1 = Multiply(res1, num.ToString());
+                num--;
+            }
+
+            while (num != 0)
+            {
+                res2 = Multiply(res2, num.ToString());
+                num--;
+            }
+
+            return Multiply(res1, res2);
+        }
         /// <summary>
         /// Возведение числа в степень
         /// </summary>
@@ -236,6 +303,9 @@ namespace GiantNumbersLibrary
         /// <param name="pow">Степень</param>
         public static string Pow(string num, string pow)
         {
+            if (pow == "0") return "1";
+            if (pow == "1") return num;
+
             string res = num;
 
             while (pow != "1")
@@ -252,12 +322,23 @@ namespace GiantNumbersLibrary
         /// <param name="num">Число</param>
         public static string Sqrt(string num)
         {
-            string res = "";
+            string res = "1";
             string oldRes = "";
-            double numFirstTwoDigitsToInt = Convert.ToInt32(num[0].ToString() + num[1].ToString());
+            int numFirstTwoDigitsToInt = 0;
+
+            try
+            {
+                numFirstTwoDigitsToInt = Convert.ToInt32(num[0].ToString() + num[1].ToString());
+            }
+            catch
+            {
+                if (num == "1" || num == "2") return "1";
+                if (num == "3" || num == "4" || num == "5" || num == "6") return "2";
+                if (num == "7" || num == "8" || num == "9") return "3";
+            }
             double approximateResLength = Utils.TextLength(num) / 2;
 
-            if (approximateResLength / 2 % 1 == 0)
+            if (approximateResLength % 1 == 0)
             {
                 if (numFirstTwoDigitsToInt <= 12) res = "3";
                 else if (numFirstTwoDigitsToInt <= 20) res = "4";
@@ -295,11 +376,14 @@ namespace GiantNumbersLibrary
 
             for (double i = 1; i < approximateResLength; i++) res += "0";
 
-            while (oldRes != res)
+            string infiniteLoopPrevention = "";
+
+            while (oldRes != res && infiniteLoopPrevention != res)
             {
-                Console.WriteLine(res);
-                res = Average(res, Divide(num, res));
+                infiniteLoopPrevention = oldRes;
                 oldRes = res;
+                res = Average(res, Divide(num, res));
+
             }
 
             return res;
@@ -312,7 +396,9 @@ namespace GiantNumbersLibrary
         /// <param name="b">Число 2</param>
         public static string Average(string a, string b)
         {
-            return Divide(Sum(Utils.GetLongestNum(a, b), Utils.GetShortestNum(a, b)), "2");
+            double aLength = Utils.TextLength(a);
+            double bLength = Utils.TextLength(b);
+            return Divide(Sum(Utils.GetLongestNum(a, b, aLength, bLength), Utils.GetShortestNum(a, b, aLength, bLength)), "2");
         }
 
         /// <summary>
@@ -336,7 +422,7 @@ namespace GiantNumbersLibrary
                 pow = Divide(pow, "2");
                 num = Mod(Multiply(num, num), modulus);
             }
-            
+
             return res;
         }
 
@@ -355,11 +441,10 @@ namespace GiantNumbersLibrary
         /// </summary>
         /// <param name="dividend">Делимое</param>
         /// <param name="divisor">Делитель</param>
-        // деление грубо отбрасывает нецелые числа, уходит в бесконечны цикл
         public static string Divide(string dividend, string divisor)
         {
             if (divisor == "0") throw new DivideByZeroException("Деление на ноль!");
-    
+
             string repeats = "0";
             string subtrahend = divisor;
             string increment_rep = "1";
@@ -387,7 +472,7 @@ namespace GiantNumbersLibrary
             }
 
             while (IsBiggerOrEqual(dividend, divisor))
-            { 
+            {
                 increment_rep = "1";
                 subtrahend = divisor;
                 dividendLength = Utils.TextLength(dividend);
@@ -406,9 +491,89 @@ namespace GiantNumbersLibrary
                     dividend = Subtract(dividend, subtrahend);
                 }
             }
+
             return repeats;
         }
+        /// <summary>
+        /// Деление с числами после запятой
+        /// </summary>
+        /// <param name="dividend">Делимое</param>
+        /// <param name="divisor">Делитель</param>
+        public static string Divide_Decimal (string dividend, string divisor, double accuracy)
+        {
+            if (divisor == "0") throw new DivideByZeroException("Деление на ноль!");
 
+            string repeats = "0";
+            string subtrahend = divisor;
+            string increment_rep = "1";
+            double subtrahendLengthPlusOne = Utils.TextLength(subtrahend) + 1;
+            double dividendLength = Utils.TextLength(dividend);
+
+            // первая итерация вынесена по той причине что и в Myltiply
+            while (subtrahendLengthPlusOne < dividendLength)
+            {
+                subtrahendLengthPlusOne++;
+                subtrahend += "0";
+                increment_rep += "0";
+            }
+
+            if (IsBiggerOrEqual(dividend, subtrahend))
+            {
+                repeats = Sum(increment_rep, repeats);
+                dividend = Subtract(dividend, subtrahend);
+            }
+
+            while (IsBiggerOrEqual(dividend, subtrahend))
+            {
+                repeats = Sum(repeats, increment_rep);
+                dividend = Subtract(dividend, subtrahend);
+            }
+
+            while (IsBiggerOrEqual(dividend, divisor))
+            {
+                increment_rep = "1";
+                subtrahend = divisor;
+                dividendLength = Utils.TextLength(dividend);
+                subtrahendLengthPlusOne = Utils.TextLength(subtrahend) + 1;
+
+                while (subtrahendLengthPlusOne < dividendLength)
+                {
+                    subtrahendLengthPlusOne++;
+                    subtrahend += "0";
+                    increment_rep += "0";
+                }
+
+                while (IsBiggerOrEqual(dividend, subtrahend))
+                {
+                    repeats = Sum(repeats, increment_rep);
+                    dividend = Subtract(dividend, subtrahend);
+                }
+            }
+
+            string res = repeats + ".";
+
+            for (double i = accuracy; i != 0; i--)
+            {
+                repeats = "0";
+                dividend += "0";
+
+                if (IsBiggerOrEqual(dividend, divisor))
+                {
+                    repeats = Sum("1", repeats);
+                    dividend = Subtract(dividend, divisor);
+                }
+
+                while (IsBiggerOrEqual(dividend, divisor))
+                {
+                    repeats = Sum(repeats, "1");
+                    dividend = Subtract(dividend, divisor);
+                }
+
+                res += repeats;
+            }
+
+            return res;
+        }
         /// <summary>
         /// нахождение остатка от деления
         /// </summary>
@@ -419,8 +584,8 @@ namespace GiantNumbersLibrary
             string subtrahend = "";
             double dividendLengthMinusOne, subtrahendLength;
 
-            while(IsBiggerOrEqual(dividend, divisor))   
-            {     
+            while (IsBiggerOrEqual(dividend, divisor))
+            {
                 subtrahend = divisor;
                 dividendLengthMinusOne = Utils.TextLength(dividend) - 1;
                 subtrahendLength = Utils.TextLength(subtrahend);
@@ -440,13 +605,13 @@ namespace GiantNumbersLibrary
         /// <summary> 
         /// больше ли одно число другого
         /// </summary>
-        public static bool IsBigger (string num1, string num2)
-        {    
-            Dictionary<double, char> number1 = Utils.StringToCharList(Utils.GetShortestNum(num1, num2));
-            Dictionary<double, char> number2 = Utils.StringToCharList(Utils.GetLongestNum(num1, num2));
-            
+        public static bool IsBigger(string num1, string num2)
+        {
             double num1Length = Utils.TextLength(num1);
             double num2Length = Utils.TextLength(num2);
+
+            Dictionary<double, char> number1 = Utils.StringToCharList(Utils.GetShortestNum(num1, num2, num1Length, num2Length));
+            Dictionary<double, char> number2 = Utils.StringToCharList(Utils.GetLongestNum(num1, num2, num1Length, num2Length));
 
             if (num1Length > num2Length) return true;
             if (num1Length < num2Length) return false;
@@ -463,17 +628,17 @@ namespace GiantNumbersLibrary
         /// <summary> 
         /// больше или равно одно другому
         /// </summary>
-        public static bool IsBiggerOrEqual (string num1, string num2)
-        {    
-            Dictionary<double, char> number1 = Utils.StringToCharList(Utils.GetShortestNum(num1, num2));
-            Dictionary<double, char> number2 = Utils.StringToCharList(Utils.GetLongestNum(num1, num2));
-
+        public static bool IsBiggerOrEqual(string num1, string num2)
+        {
             double num1Length = Utils.TextLength(num1);
             double num2Length = Utils.TextLength(num2);
 
+            Dictionary<double, char> number1 = Utils.StringToCharList(Utils.GetShortestNum(num1, num2, num1Length, num2Length));
+            Dictionary<double, char> number2 = Utils.StringToCharList(Utils.GetLongestNum(num1, num2, num1Length, num2Length));
+
             if (num1Length > num2Length) return true;
             if (num1Length < num2Length) return false;
-                
+
             for (double i = num1Length; i != 0; i--)
             {
                 if (int.Parse(number1[i].ToString()) > int.Parse(number2[i].ToString())) return true;
@@ -485,14 +650,33 @@ namespace GiantNumbersLibrary
     }
     static class Utils
     {
-        public static string AddZeros (string num, double limit)
+        public static string AddZeros_Beginning(string num, double limit)
         {
-            while (TextLength(num) < limit) num = "0" + num;
+            double numLength = TextLength(num);
+
+            while (numLength < limit)
+            {
+                num = "0" + num;
+                numLength++;
+            }
+
+            return num;
+        }
+        public static string AddZeros_Ending(string num, double howMuch)
+        {
+            double tmp = 0;
+
+            while (tmp < howMuch)
+            {
+                num += "0";
+                tmp++;
+            }
+
             return num;
         }
         public static int Compare(string number1, string number2)
         {
-            if (TextLength(number1) > TextLength(number2))      return 1;
+            if (TextLength(number1) > TextLength(number2)) return 1;
             else if (TextLength(number1) < TextLength(number2)) return -1;
             return string.Compare(number1, number2, StringComparison.Ordinal);
         }
@@ -507,32 +691,19 @@ namespace GiantNumbersLibrary
             }
             return map;
         }
-        public static string GetLongestNum(string number1, string number2)
+        public static string GetLongestNum(string number1, string number2, double? num1Length = null, double? num2Length = null)
         {
-            if (TextLength(number1) > TextLength(number2)) return number1;
+            if (num1Length == null) num1Length = TextLength(number1);
+            if (num2Length == null) num2Length = TextLength(number2);
+            if (num1Length > num2Length) return number1;
             return number2;
         }
-        public static string GetShortestNum(string number1, string number2)
+        public static string GetShortestNum(string number1, string number2, double? num1Length = null, double? num2Length = null)
         {
-            string result = number1;
-            string longestNum = number2;
-            
-            if (TextLength(number1) > TextLength(number2))
-            {
-                result = number2;
-                longestNum = number1;
-            }
-
-            double longestNumLength = TextLength(longestNum);
-            double resultLength = TextLength(result);
-            
-            while (longestNumLength > resultLength)
-            {
-                result = "0" + result;
-                resultLength++;
-            }
-
-            return result;
+            if (num1Length == null) num1Length = TextLength(number1);
+            if (num2Length == null) num2Length = TextLength(number2);
+            if (num1Length > num2Length) return number2;
+            return number1;
         }
         public static double TextLength(string text)
         {
@@ -551,6 +722,55 @@ namespace GiantNumbersLibrary
             Dictionary<double, char> emptyArray = new Dictionary<double, char>();
             for (double num = 0; num <= newSize; num++) emptyArray.Add(num, '0');
             return emptyArray;
+        }
+
+        public static string TakeSymbols(string src, double fromWhatDigit, double toWhatDigit)
+        {
+            Dictionary<double, char> src_dict = StringToCorrectCharList(src);
+
+            string res = "";
+
+            while (fromWhatDigit != toWhatDigit)
+            {
+                res += src_dict[fromWhatDigit];
+                fromWhatDigit++;
+            }
+
+            return res;
+        }
+
+        public static string TakeSymbols_ToTheEnd(string src, double fromWhatDigit)
+        {
+            Dictionary<double, char> src_dict = StringToCorrectCharList(src);
+
+            string res = "";
+
+            try
+            {
+                while (true)
+                {
+                    res += src_dict[fromWhatDigit];
+                    fromWhatDigit++;
+                }
+            }
+            catch
+            {
+                return res;
+            }
+        }
+
+
+        public static Dictionary<double, char> StringToCorrectCharList(string str)
+        {
+            double lenght = 0;
+            Dictionary<double, char> map = ArrayAddEmpty(lenght - 1);
+            foreach (char Char in str)
+            {
+                map[lenght] = Char;
+                lenght++;
+            }
+
+            return map;
         }
     }
 }
