@@ -100,12 +100,12 @@ namespace GiantNumbersLibrary
             int resultDigit = 0;
             double currentNum = 1;
 
-            try
+            foreach (char Char in numMap1.Values)
             {
-                while (true)
+                resultDigit = int.Parse(Char.ToString()) - int.Parse(numMap2[currentNum].ToString()) - transfer;
+                currentNum++;
+                if (currentNum != 1)
                 {
-                    resultDigit = int.Parse(numMap1[currentNum].ToString()) - int.Parse(numMap2[currentNum].ToString()) - transfer;
-                    currentNum++;
                     if (resultDigit < 0)
                     {
                         resultDigit += 10;
@@ -114,22 +114,18 @@ namespace GiantNumbersLibrary
                     else transfer = 0;
                     result = resultDigit.ToString() + result;
                 }
+            }
 
+            try
+            {
+                while (result[0] == '0') result = ("q" + result).Replace("q0", "");
             }
             catch
             {
-                if (transfer == 1) result = "1" + result;
-                try
-                {
-                    while (result[0] == '0') result = ("q" + result).Replace("q0", "");
-                }
-                catch
-                {
-                    return "0";
-                }
-
-                return result;
+                return "0";
             }
+
+            return result;
         }
         /// <summary>
         /// Умножение чисел
@@ -560,25 +556,20 @@ namespace GiantNumbersLibrary
             }
 
             string res = repeats + ".";
+            double ch = 0;
 
-            for (double i = accuracy; i != 0; i--)
+            for (double i = accuracy; i != 0 && dividend != "0"; i--)
             {
-                repeats = "0";
+                ch = 0;
                 dividend += "0";
-
-                if (IsBiggerOrEqual(dividend, divisor))
-                {
-                    repeats = Sum("1", repeats);
-                    dividend = Subtract(dividend, divisor);
-                }
 
                 while (IsBiggerOrEqual(dividend, divisor))
                 {
-                    repeats = Sum(repeats, "1");
+                    ch++;
                     dividend = Subtract(dividend, divisor);
                 }
 
-                res += repeats;
+                res += Convert.ToString(ch);
             }
 
             return res;
